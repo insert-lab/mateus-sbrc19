@@ -16,13 +16,16 @@
 #         - O malicious node encaminha o interest e espera pelo pacote de dados para entao altera-lo
 #           ou ao receber o pacote forja um payload e insere sua chave no lugar da do produtor
 
-declare -A used_accounts
 
 
 if [ $# -lt 1 ] ; then
     echo "Usage: $0 num_nodes"
     exit
 fi
+
+# A dict
+declare -A used_accounts
+
 # Number of nodes
 n_nodes=$1
 
@@ -40,7 +43,7 @@ core_dir=$(echo /tmp/pycore.*)
 [ -z "$core_dir" ] && exit -1
 contract_address=""
 
-cp mobility* /tmp
+# ////////////////////////////////  Install functions
 
 blockchain(){
   echo "Starting BC"
@@ -75,6 +78,7 @@ install_router(){
   /usr/local/bin/vcmd -c "$core_dir/n${1}" -- bash "$core_dir"/n${1}.conf/ndn-content-validation/src/python/router.sh "$core_dir" "$1" &
 }
 
+# ///////////////////// Run experiments
 
 # Start blockchain
 blockchain
@@ -129,7 +133,5 @@ for (( i = 1; i <= $n_nodes; i++ )); do
     echo "Installing router app on node $i"
     used_accounts[$i]=true
     install_router $i
-  else
-      let i--
   fi
 done

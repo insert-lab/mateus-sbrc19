@@ -66,19 +66,25 @@ class FakeProducer():
             #     # Delete entry
             #     del(self.PIT[name])
 
-            if data_2_json['type'] == "interest" or data_2_json['type'] == "data": # Forward?
+            # IF it's a interest packet then Forward it
+            if data_2_json['type'] == "interest":
+                # Decrement hop count
+                data_2_json['hop_count'] = data_2_json['hop_count']-1
+                # Forward interest packet
+                interest = str(json.dumps(data_2_json)).encode('ascii')
+                self.sock_udp.sendto(interest,('<broadcast>',2222))
+                # Add on PIT
+                self.PIT[name] = True
+
+
+            # if data_2_json['type'] == "interest" or data_2_json['type'] == "data": # Forward?
+            if data_2_json['type'] == "data":
                 # print("[DEBUG] Attacking packet ".join(name))
                 # Fake data packet
                 data_pkt = {'type':'data','name':name, 'account': str(self.this_account), 'payload': [hex(x) for x in range(40)]}
                 message = str(json.dumps(data_pkt)).encode('ascii')
-
-                # Decrement hop count
-                # data_2_json['hop_count'] = data_2_json['hop_count']-1
-                # # Forward interest packet
-                # message = str(json.dumps(data_2_json)).encode('ascii')
+                del(self.PIT[name])
                 self.sock_udp.sendto(message,('<broadcast>',2222))
-                # # Add on PIT
-                # self.PIT[name] = True
 
 if len(sys.argv) < 2:
     print("[!] Usage: {0} <contract_address> <account_index> ".format(sys.argv[0]))

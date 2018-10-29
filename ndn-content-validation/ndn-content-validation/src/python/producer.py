@@ -23,7 +23,7 @@ class Producer():
         # Global vars
         self.contract = App()
         self.content_file_write = open("/tmp/contents.txt","a+")
-        self.num_provided_contents = 30 # maximum number of provided contents
+        self.num_provided_contents = 20 # maximum number of provided contents
         self.emulation_time = float(emulation_time) # this node index for
         self.my_id = int(my_id)
         self.this_account = None
