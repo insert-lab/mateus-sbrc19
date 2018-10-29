@@ -41,7 +41,7 @@ class Router():
             name = data_2_json['name']
 
             # Here starts the attack <----
-            if self.PIT.get(name): # Is a data packet?
+            if self.PIT.get(name) and data_2_json['type'] == "data": # Is a data packet?
                 # print("[DEBUG] Router forwarding DATA packet %s" % (name))
                 # Send
                 self.sock_udp.sendto(data,('<broadcast>',2222))
@@ -49,14 +49,16 @@ class Router():
                 del(self.PIT[name])
 
             elif data_2_json['type'] == "interest": # Forward?
+                hop_count = data_2_json['hop_count']
                 # print("[DEBUG] Router forwarding INTEREST packet %s" % (name))
-                # Decrement hop count
-                data_2_json['hop_count'] = data_2_json['hop_count']-1
-                # Forward interest packet
-                message = str(json.dumps(data_2_json)).encode('ascii')
-                self.sock_udp.sendto(message,('<broadcast>',2222))
-                # Add on PIT
-                self.PIT[name] = True
+                if hop_count >= 1:
+                    # Decrement hop count
+                    data_2_json['hop_count'] = data_2_json['hop_count']-1
+                    # Forward interest packet
+                    message = str(json.dumps(data_2_json)).encode('ascii')
+                    self.sock_udp.sendto(message,('<broadcast>',2222))
+                    # Add on PIT
+                    self.PIT[name] = True
 
 # Main Function
 def main():

@@ -35,8 +35,8 @@ RANDOM=2129
 
 # emulation parameters
 n_producers=2
-n_consumers=6
-n_attackers=6
+n_consumers=3
+n_attackers=0
 
 # Global VARS
 core_dir=$(echo /tmp/pycore.*)

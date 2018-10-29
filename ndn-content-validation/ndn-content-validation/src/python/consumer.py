@@ -26,7 +26,7 @@ class Consumer():
         # File with content names TODO: remove '\n' chars
         self.content_file_array = ""
         # According to the emulation time
-        self.maximum_request = random.randint(20,500)
+        self.maximum_request = 5 #random.randint(20,500)
         self.requests_per_second = 5
         # UDP Socket
         self.sock_udp = socket(AF_INET,SOCK_DGRAM)
@@ -90,6 +90,7 @@ class Consumer():
             data_2_json = json.loads(data.decode('utf-8'))
             name = data_2_json['name']
             # Is pending?
+            print("[DEBUG] Node has received a data packet for {}".format(name))
             if self.this_PIT.get(name) and data_2_json['type'] == "data":
                 provider = data_2_json['account']
                 status = self.contract._verifyContent(name,provider)
@@ -105,13 +106,15 @@ class Consumer():
                 del(self.PIT[name])
 
             elif data_2_json['type'] == "interest" and not (self.this_PIT.get(name) or  self.PIT.get(name)): # Forward it
-                # Decrement hop count
-                data_2_json['hop_count'] = data_2_json['hop_count']-1
-                # Forward interest packet
-                message = str(json.dumps(data_2_json)).encode('ascii')
-                self.sock_udp.sendto(message,('<broadcast>',2222))
-                # Add on PIT
-                self.PIT[name] = True
+                hop_count = data_2_json['hop_count']
+                if hop_count >= 1:
+                    # Decrement hop count
+                    data_2_json['hop_count'] = data_2_json['hop_count']-1
+                    # Forward interest packet
+                    message = str(json.dumps(data_2_json)).encode('ascii')
+                    self.sock_udp.sendto(message,('<broadcast>',2222))
+                    # Add on PIT
+                    self.PIT[name] = True
 
             # else: #drop it
             #     print (data_2_json)
@@ -139,7 +142,7 @@ def main():
 
     consumer = Consumer(contract_address, emulation_time,my_id)
     # Wait for producers register their contents
-    time.sleep(6)
+    time.sleep(5)
     consumer.setFile()
     s = Thread(None,target=consumer.StopEmulation)
     s.start()

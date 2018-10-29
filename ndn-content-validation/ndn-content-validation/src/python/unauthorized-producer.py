@@ -79,12 +79,14 @@ class FakeProducer():
 
             # if data_2_json['type'] == "interest" or data_2_json['type'] == "data": # Forward?
             if data_2_json['type'] == "data":
-                # print("[DEBUG] Attacking packet ".join(name))
-                # Fake data packet
-                data_pkt = {'type':'data','name':name, 'account': str(self.this_account), 'payload': [hex(x) for x in range(40)]}
-                message = str(json.dumps(data_pkt)).encode('ascii')
-                del(self.PIT[name])
-                self.sock_udp.sendto(message,('<broadcast>',2222))
+                if self.PIT.get(name):
+                    del(self.PIT[name])
+                    # print("[DEBUG] Attacking packet ".join(name))
+                    # Fake data packet
+                    data_pkt = {'type':'data','name':name, 'account': str(self.this_account), 'payload': [hex(x) for x in range(40)]}
+                    message = str(json.dumps(data_pkt)).encode('ascii')
+                    self.sock_udp.sendto(message,('<broadcast>',2222))
+
 
 if len(sys.argv) < 2:
     print("[!] Usage: {0} <contract_address> <account_index> ".format(sys.argv[0]))

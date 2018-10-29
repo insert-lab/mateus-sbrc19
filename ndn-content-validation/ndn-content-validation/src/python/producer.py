@@ -79,6 +79,7 @@ class Producer():
             name = data_2_json['name']
 
             if str(producer) == str(self.this_account) and data_2_json['type'] == "interest":
+                # print("[DEBUG] Producer {0} has received an interest for {1}".format(producer,name) )
                 # Now return a data packet
                 data_pkt = {'type':'data','name':name, 'account': str(self.this_account), 'payload': [hex(x) for x in range(40)]}
                 message = str(json.dumps(data_pkt)).encode('ascii')
@@ -90,13 +91,15 @@ class Producer():
 
             elif data_2_json['type'] == "interest":
                 # Decrement hop count
-                data_2_json['hop_count'] = data_2_json['hop_count']-1
-                # Forward interest packet
-                message = str(json.dumps(data_2_json)).encode('ascii')
-                # Send
-                self.sock_udp.sendto(message,('<broadcast>',2222))
-                # Add on PIT
-                self.PIT[name] = True
+                hop_count = data_2_json['hop_count']
+                if hop_count >=1:
+                    data_2_json['hop_count'] = data_2_json['hop_count']-1
+                    # Forward interest packet
+                    message = str(json.dumps(data_2_json)).encode('ascii')
+                    # Send
+                    self.sock_udp.sendto(message,('<broadcast>',2222))
+                    # Add on PIT
+                    self.PIT[name] = True
 
     def StopEmulation(self):
         time.sleep(self.emulation_time+2)
