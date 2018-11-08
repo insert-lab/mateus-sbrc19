@@ -21,7 +21,7 @@ class Producer():
         # Global vars
         self.contract = App()
         self.content_file_write = open("/tmp/contents.txt","a+")
-        self.num_provided_contents = 20 # maximum number of provided contents
+        self.num_provided_contents = 100 # maximum number of provided contents
         self.emulation_time = float(emulation_time) # this node index for
         self.my_id = int(my_id)
         self.contract_address = contract_address
@@ -71,23 +71,23 @@ class Producer():
                 if str(producer) == str(self.my_id) and ndn_packet['type'] == "interest":
                     # print("[DEBUG-PR] Node {0} received an interest for {1}".format(self.my_id, name))
                     # Now return a data packet
-                    data_pkt = {'hop_count':15,'type':'data','name':name, 'provider': str(self.my_id), 'payload': [hex(x) for x in range(40)]}
+                    data_pkt = {'hop_count':15,'type':'data','name':name, 'provider': str(self.my_id), 'payload': [hex(x) for x in range(104)]}
                     message = str(json.dumps(data_pkt)).encode('ascii')
                     self.sock_udp.sendto(message,('<broadcast>',2222))
 
                 elif self.PIT.get(name): # return data to origin
-                    self.sock_udp.sendto(data,('<broadcast>',2222))
                     del(self.PIT[name])
+                    self.sock_udp.sendto(data,('<broadcast>',2222))
 
                 elif ndn_packet['type'] == "interest":
+                    # Add on PIT
+                    self.PIT[name] = True
                     # Decrement hop count
                     ndn_packet['hop_count'] = ndn_packet['hop_count']-1
                     # Forward interest packet
                     message = str(json.dumps(ndn_packet)).encode('ascii')
                     # Send
                     self.sock_udp.sendto(message,('<broadcast>',2222))
-                    # Add on PIT
-                    self.PIT[name] = True
 
     def StopEmulation(self):
         time.sleep(self.emulation_time+2)

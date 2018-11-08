@@ -8,7 +8,7 @@
 # Location: UFBA, Brazil
 # Date: 09/14/18
 from socket import *
-import sys,os
+import sys,os,time
 import random
 import json
 from threading import Thread
@@ -22,10 +22,24 @@ class Router():
         self.sock_udp.setsockopt(SOL_SOCKET,SO_BROADCAST,1)
         # Data packet structure
         self.Data = dict()
+        self.interestLifetime = 4
         # node PIT data structure
         self.this_PIT = dict()
         # General PIT
         self.PIT = dict()
+
+    def onTimeOut(self):
+        # XXX: PIT structure is: {name:(start_time, type)}
+        while 1:
+            # iterates for PIT
+            if len(self.PIT) > 0:
+                temp_PIT = self.PIT.copy()
+                for k in temp_PIT:
+                    now = time.time()
+                    if now - self.PIT[k] >= self.interestLifetime:
+                        # Remove from PIT
+                        del(self.PIT[k])
+            time.sleep(0.3)
 
     def onInterest(self):
         # Consumer side
@@ -39,34 +53,31 @@ class Router():
             # Data Infos
             producer = str(ndn_packet['name']).split('/')[1]
             name = ndn_packet['name']
+            pkt_type = ndn_packet['type']
 
             if ndn_packet['hop_count'] > 0:
                 try:
                     # Here starts the attack <----
                     if self.PIT.get(name): # Is a data packet?
                         # print("[DEBUG-R] Router forwarding DATA packet %s" % (name))
-                        # Send
-                        self.sock_udp.sendto(data,('<broadcast>',2222))
                         # Delete entry
                         del(self.PIT[name])
-
-                    elif ndn_packet['type'] == "interest": # Forward?
-                        # print("[DEBUG-R] Router forwarding INTEREST packet %s" % (name))
-                        # Decrement hop count
+                        # Send
                         ndn_packet['hop_count'] = ndn_packet['hop_count']-1
                         # Forward interest packet
                         message = str(json.dumps(ndn_packet)).encode('ascii')
                         self.sock_udp.sendto(message,('<broadcast>',2222))
+
+                    elif (pkt_type == "interest" or pkt_type == "VER" or pkt_type == "REG"):
+                        # print("[DEBUG-R] Forwarding message {}".format(ndn_packet))
+                        # Decrement hop count
+                        ndn_packet['hop_count'] = ndn_packet['hop_count']-1
+                        # Forward interest packet
+                        message = str(json.dumps(ndn_packet)).encode('ascii')
                         # Add on PIT
-                        self.PIT[name] = True
-
-                    else:
-                        # print("[DEBUG-R] Forwarding message {}".format(ndn_packet['type']))
-                        # Decrement hop count
-                        ndn_packet['hop_count'] = ndn_packet['hop_count']-1
-                        # Forward interest packet
-                        message = str(json.dumps(ndn_packet)).encode('ascii')
+                        self.PIT[name] = time.time()
                         self.sock_udp.sendto(message,('<broadcast>',2222))
+
                 except Exception as err:
                     print ("[DEBUG-R] Router error: ",err, " on packet {}".format(ndn_packet))
                     exit(-1)
@@ -76,6 +87,9 @@ def main():
     router = Router()
     t = Thread(None, target=router.onInterest)
     t.start()
+    p = Thread(None,target=router.onTimeOut)
+    p.start()
+
 
 
 if __name__ == '__main__':

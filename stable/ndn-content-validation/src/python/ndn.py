@@ -10,7 +10,7 @@ class NDN():
         # node PIT data structure
         self.this_PIT = dict()
 
-    def onTimeOut(self,sock_udp):
+    def onTimeOut(self,PIT,sock_udp):
         while 1:
             if len(self.this_PIT) > 0:
                 for k in self.this_PIT:

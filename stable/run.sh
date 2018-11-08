@@ -30,13 +30,13 @@ declare -A used_accounts
 n_nodes=$1
 
 # Set random seed
-RANDOM=2129
-# RANDOM=3203
+# RANDOM=2129
+RANDOM=3203
 
 # emulation parameters
 n_producers=2
 n_consumers=6
-n_attackers=4
+n_attackers=2
 
 # Global VARS
 core_dir=$(echo /tmp/pycore.*)

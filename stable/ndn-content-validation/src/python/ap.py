@@ -54,14 +54,17 @@ class AP():
 
             # Here starts the attack <----
             if pkt_type == "VER":
-                if self.PIT.get(name):
+                # TODO: Check if this packet was already verified
+                if self.PIT.get(name): # 4s default NDN interestLifetime
+                    # Link provider ID with an wallet account
                     prefix = self.contract.getAnAccount(int(provider))
                     content_name = "/{0}/{1}".format(prefix,name)
+
                     try:
                         provider = self.contract.getAnAccount(int(ndn_packet['provider']))
-                        print("[DEBUG-AP] AP verifying Content %s for provider %s" % (name,provider))
+                        # print("[DEBUG-AP] AP verifying Content %s for provider %s" % (name,provider))
                         status = self.contract._verifyContent(content_name,provider)
-                        print("[DEBUG-AP] Status ", status)
+                        # print("[DEBUG-AP] Status ", status)
 
                         message = {'hop_count':15, 'type':'VER', 'name':ndn_packet['name'],'status':status}
                         message2json = str(json.dumps(message)).encode('ascii')
@@ -79,7 +82,7 @@ class AP():
                     # print("[DEBUG-AP] AP registering content %s" % (content_name))
                     self.contract._registerContent(content_name,provider)
                     self.writeRegisteredContents(ndn_packet['name'])
-                    self.PIT[name] = True
+                    self.PIT[name] = 4
 
             # TODO: Finish this implementation
             # elif data_2_json['type'] == "AUT":
